@@ -1,0 +1,29 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('clone') {
+            steps {
+                git 'https://github.com/santhosh941/ci-cd-pipeline.git'
+                echo "cloned sucessfully"
+            }
+        }
+        stage('build'){
+            steps{
+                sh "docker build -t my-python-app ."
+            }
+        }
+        stage('pushing to dockerhub'){
+            steps{
+                echo "pushing image to dockerhub"
+                 withCredentials([usernamePassword(credentialsId:"Dockerhub",passwordVariable:"dockerHubPass",usernameVariable:"dockerHubUser")]){
+                 sh "docker tag my-python-app ${dockerHubUser}/my-python-app:latest"
+                 sh '''
+                  echo $dockerHubPass | docker login -u $dockerHubUser --password-stdin 
+                  '''
+                 sh "docker push ${dockerHubUser}/my-python-app:latest" 
+                 }
+            }
+        }
+    }
+}
